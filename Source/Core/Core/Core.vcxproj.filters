@@ -413,6 +413,9 @@
     <ClCompile Include="HW\GCMemcard.cpp">
       <Filter>HW %28Flipper/Hollywood%29\GCMemcard</Filter>
     </ClCompile>
+    <ClCompile Include="HW\GCMemcardDirectory.cpp">
+      <Filter>HW %28Flipper/Hollywood%29\GCMemcard</Filter>
+    </ClCompile>
     <ClCompile Include="HW\GCPad.cpp">
       <Filter>HW %28Flipper/Hollywood%29\GCPad</Filter>
     </ClCompile>
@@ -704,6 +707,9 @@
     </ClCompile>
     <ClCompile Include="PowerPC\JitILCommon\IR.cpp">
       <Filter>PowerPC\JitILCommon</Filter>
+    </ClCompile>
+    <ClCompile Include="HW\EXI_DeviceMemoryCardFolder.cpp">
+      <Filter>HW %28Flipper/Hollywood%29\EXI - Expansion Interface</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -1212,6 +1218,9 @@
     </ClInclude>
     <ClInclude Include="PowerPC\JitILCommon\IR.h">
       <Filter>PowerPC\JitILCommon</Filter>
+    </ClInclude>
+    <ClInclude Include="HW\EXI_DeviceMemoryCardFolder.h">
+      <Filter>HW %28Flipper/Hollywood%29\EXI - Expansion Interface</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
