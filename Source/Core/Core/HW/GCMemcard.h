@@ -251,6 +251,8 @@ public:
 	void DoState(PointerWrap &p);
 	DEntry m_gci_header;
 	std::vector<GCMBlock> m_save_data;
+	std::vector<u16> m_used_blocks;
+	int UsesBlock(u16 blocknum);
 	bool m_dirty;
 	std::string m_filename;
 };
@@ -362,6 +364,7 @@ private:
 	bool LoadGCI(std::string fileName, int region);
 	//s32 DirectoryRead(u32 offset, u32 length, u8* destaddress);
 	s32 DirectoryWrite( u32 destaddress, u32 length, u8* srcaddress);
+	bool SetUsedBlocks(int saveIndex); 
 
 	
 	s32 m_LastBlock;
