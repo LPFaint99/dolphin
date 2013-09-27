@@ -361,7 +361,7 @@ public:
 	void clearAll() {};
 	void DoState(PointerWrap &p);
 private:
-	bool LoadGCI(std::string fileName, int region);
+	int LoadGCI(std::string fileName, int region);
 	//s32 DirectoryRead(u32 offset, u32 length, u8* destaddress);
 	s32 DirectoryWrite( u32 destaddress, u32 length, u8* srcaddress);
 	bool SetUsedBlocks(int saveIndex); 
@@ -375,6 +375,6 @@ private:
 	BlockAlloc m_bat1, m_bat2;
 	std::vector<GCIFile> m_saves;
 
-
+	std::vector<std::string> m_loaded_saves;
 	std::string m_SaveDirectory;
 };
