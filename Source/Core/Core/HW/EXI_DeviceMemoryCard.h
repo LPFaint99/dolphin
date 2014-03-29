@@ -16,7 +16,8 @@ public:
 	void DoState(PointerWrap &p) override;
 	void PauseAndLock(bool doLock, bool unpauseOnUnlock=true) override;
 	IEXIDevice* FindDevice(TEXIDevices device_type, int customIndex=-1) override;
-
+	void DMARead(u32 _uAddr, u32 _uSize) override;
+	void DMAWrite(u32 _uAddr, u32 _uSize) override;
 private:
 	// This is scheduled whenever a page write is issued. The this pointer is passed
 	// through the userdata parameter, so that it can then call Flush on the right card.

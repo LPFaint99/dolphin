@@ -16,6 +16,7 @@
 #include "Core/HW/EXI_DeviceMemoryCardRaw.h"
 #include "Core/HW/GCMemcard.h"
 #include "Core/HW/Sram.h"
+#include "Memmap.h"
 
 #define MC_STATUS_BUSY              0x80
 #define MC_STATUS_UNLOCKED          0x40
@@ -408,4 +409,18 @@ IEXIDevice* CEXIMemoryCard::FindDevice(TEXIDevices device_type, int customIndex)
 	if (customIndex != card_index)
 		return nullptr;
 	return this;
+}
+
+// DMA reads are preceded by all of the necessary setup via IMMRead
+// read all at once instead of single byte at a time as done by IEXIDevice::DMARead
+void CEXIMemoryCard::DMARead(u32 _uAddr, u32 _uSize)
+{
+	memorycard->Read(address, _uSize, Memory::GetPointer(_uAddr));
+}
+
+// DMA write are preceded by all of the necessary setup via IMMWrite
+// write all at once instead of single byte at a time as done by IEXIDevice::DMAWrite
+void CEXIMemoryCard::DMAWrite(u32 _uAddr, u32 _uSize)
+{
+	memorycard->Write(address, _uSize, Memory::GetPointer(_uAddr));
 }
