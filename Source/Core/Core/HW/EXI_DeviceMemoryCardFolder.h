@@ -14,7 +14,7 @@ public:
 	CEXIMemoryCardFolder(const int index);
 	virtual ~CEXIMemoryCardFolder();
 	void DMARead (u32 _uAddr, u32 _uSize);
-	//void DMAWrite(u32 _uAddr, u32 _uSize);
+	void DMAWrite(u32 _uAddr, u32 _uSize);
 	void SetCS(int cs);
 	void Update();
 	bool IsInterruptSet();
