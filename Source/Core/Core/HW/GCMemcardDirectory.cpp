@@ -5,6 +5,7 @@
 #include "GCMemcard.h"
 #include "DiscIO/Volume.h"
 #include "../Core.h"
+#include "Common/CommonTypes.h"
 
 const int NO_INDEX = -1;
 const char * MC_HDR = "MC_SYSTEM_AREA";
@@ -203,7 +204,7 @@ s32 GCMemcardDirectory::Read(u32 address, s32 length, u8* destaddress)
 
 	memcpy(destaddress, m_LastBlockAddress+offset, length);
 	if (extra)
-		extra = Read(address + length, extra, destaddress+length);
+		extra = Read(address + length, extra, destaddress + length);
 	return length + extra;
 }
 
@@ -232,8 +233,17 @@ s32 GCMemcardDirectory::Write(u32 destaddress, s32 length, u8* srcaddress)
 			break;
 		case 1:
 		case 2:
+			{
 			m_LastBlock = -1;
-			return DirectoryWrite(destaddress, length, srcaddress);	
+			s32 bytes_written = 0;
+			while (length > 0)
+			{
+				s32 to_write = std::min<s32>(DENTRY_SIZE, length);
+				bytes_written += DirectoryWrite(destaddress + bytes_written, to_write, srcaddress + bytes_written);
+				length -= to_write;
+			}
+			return bytes_written;
+			}
 		case 3:
 			m_LastBlock = block;
 			m_LastBlockAddress = (u8*)&m_bat1;
@@ -255,7 +265,7 @@ s32 GCMemcardDirectory::Write(u32 destaddress, s32 length, u8* srcaddress)
 	memcpy(m_LastBlockAddress+offset, srcaddress, length);
 	
 	if (extra)
-		extra = Write(destaddress + length, extra, srcaddress+length);
+		extra = Write(destaddress + length, extra, srcaddress + length);
 	return length + extra;
 }
 

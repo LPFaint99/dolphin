@@ -468,17 +468,16 @@ IEXIDevice* CEXIMemoryCardFolder::FindDevice(TEXIDevices device_type, int custom
 	return this;
 }
 
-// DMA reads seem to be preceded by all of the necessary setup via
-// IMMRead, do DMA all at once instead of single byte at a time as done by IEXIDevice::DMARead
+// DMA reads are preceded by all of the necessary setup via IMMRead
+// read all at once instead of single byte at a time as done by IEXIDevice::DMARead
 void CEXIMemoryCardFolder::DMARead (u32 _uAddr, u32 _uSize)
 {
 	memcarddir->Read(address, _uSize, Memory::GetPointer(_uAddr));
 }
 
-// Unfortunately DMA wites are not as simple as reads
-// TODO: investigate further to see if we can bypass the single
-// byte transfer as done by IEXIDevice::DMAWrite
-/*void CEXIMemoryCardFolder::DMAWrite(u32 _uAddr, u32 _uSize)
+// DMA write are preceded by all of the necessary setup via IMMWrite
+// write all at once instead of single byte at a time as done by IEXIDevice::DMAWrite
+void CEXIMemoryCardFolder::DMAWrite(u32 _uAddr, u32 _uSize)
 {
-	//	memcarddir->Write(address, _uSize, Memory::GetPointer(_uAddr));
-}*/
+	memcarddir->Write(address, _uSize, Memory::GetPointer(_uAddr));
+}
