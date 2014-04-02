@@ -7,7 +7,7 @@ class MemoryCardBase;
 class CEXIMemoryCard : public IEXIDevice
 {
 public:
-	CEXIMemoryCard(const int index);
+	CEXIMemoryCard(const int index, bool gciFolder);
 	virtual ~CEXIMemoryCard();
 	void SetCS(int cs) override;
 	void Update() override;
@@ -19,6 +19,8 @@ public:
 	void DMARead(u32 _uAddr, u32 _uSize) override;
 	void DMAWrite(u32 _uAddr, u32 _uSize) override;
 private:
+	void setupFolder();
+	void setupRawMC();
 	// This is scheduled whenever a page write is issued. The this pointer is passed
 	// through the userdata parameter, so that it can then call Flush on the right card.
 	static void FlushCallback(u64 userdata, int cyclesLate);

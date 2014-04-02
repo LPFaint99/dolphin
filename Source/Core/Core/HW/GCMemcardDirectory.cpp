@@ -110,7 +110,8 @@ int GCMemcardDirectory::LoadGCI(std::string fileName, int region)
 }
 
 GCMemcardDirectory::GCMemcardDirectory(std::string directory, int slot, u16 sizeMb, bool ascii, int region, int gameId) 
-	: m_GameId(gameId),
+	: MemoryCardBase(slot, sizeMb),
+	m_GameId(gameId),
 	m_LastBlock(-1),
 	m_hdr(slot, sizeMb, ascii),
 	m_bat1(sizeMb),
@@ -269,8 +270,15 @@ s32 GCMemcardDirectory::Write(u32 destaddress, s32 length, u8* srcaddress)
 	return length + extra;
 }
 
-void GCMemcardDirectory::clearBlock(u32 block)
+void GCMemcardDirectory::ClearBlock(u32 address)
 {
+	if (address % BLOCK_SIZE)
+	{
+		PanicAlertT("GCMemcardDirectory: ClearBlock called with invalid block address");
+		return;
+	}
+
+	u32 block = address / BLOCK_SIZE;
 	switch (block)
 	{
 	case 0:
@@ -434,9 +442,9 @@ bool GCMemcardDirectory::SetUsedBlocks(int saveIndex)
 	return true;
 }
 
-int GCMemcardDirectory::Flush(bool exiting)
+void GCMemcardDirectory::Flush(bool exiting)
 {
-	int errors = 0;;
+	int errors = 0;
 	DEntry invalid;
 	for (int i = 0; i < m_saves.size(); ++i)
 	{
@@ -505,7 +513,6 @@ int GCMemcardDirectory::Flush(bool exiting)
 	File::IOFile hdrfile(m_SaveDirectory + MC_HDR, "wb");
 	hdrfile.WriteBytes(mc, BLOCK_SIZE*MC_FST_BLOCKS);
 #endif
-	return errors;
 }
 
 void GCMemcardDirectory::DoState(PointerWrap &p)

@@ -45,14 +45,10 @@ void CEXIMemoryCard::CmdDoneCallback(u64 userdata, int cyclesLate)
 		pThis->CmdDone();
 }
 
-CEXIMemoryCard::CEXIMemoryCard(const int index)
+CEXIMemoryCard::CEXIMemoryCard(const int index, bool gciFolder)
 	: card_index(index)
 	, m_bDirty(false)
 {
-	std::string filename = (card_index == 0) ? SConfig::GetInstance().m_strMemoryCardA : SConfig::GetInstance().m_strMemoryCardB;
-	if (Movie::IsPlayingInput() && Movie::IsConfigSaved() && Movie::IsUsingMemcard() && Movie::IsStartingFromClearSave())
-		filename = File::GetUserPath(D_GCUSER_IDX) + "Movie.raw";
-
 	// we're potentially leaking events here, since there's no UnregisterEvent until emu shutdown, but I guess it's inconsequential
 	et_this_card = CoreTiming::RegisterEvent((index == 0) ? "memcardFlushA" : "memcardFlushB", FlushCallback);
 	et_cmd_done = CoreTiming::RegisterEvent((index == 0) ? "memcardDoneA" : "memcardDoneB", CmdDoneCallback);
@@ -64,7 +60,6 @@ CEXIMemoryCard::CEXIMemoryCard(const int index)
 	m_uPosition = 0;
 	memset(programming_buffer, 0, sizeof(programming_buffer));
 	formatDelay = 0;
-
 	//Nintendo Memory Card EXI IDs
 	//0x00000004 Memory Card 59     4Mbit
 	//0x00000008 Memory Card 123    8Mb
@@ -75,6 +70,80 @@ CEXIMemoryCard::CEXIMemoryCard(const int index)
 
 	//0x00000510 16Mb "bigben" card
 	//card_id = 0xc243;
+	card_id = 0xc221; // It's a Nintendo brand memcard
+
+	if (!gciFolder)
+	{
+		setupRawMC();
+	}
+	else
+		setupFolder();
+
+	memory_card_size = memorycard->GetCardId() * SIZE_TO_Mb;
+	u8 header[20] = { 0 };
+	memorycard->Read(0, 20, header);
+	SetCardFlashID(header, card_index);
+}
+
+void CEXIMemoryCard::setupFolder()
+{
+
+	DiscIO::IVolume::ECountry CountryCode = DiscIO::IVolume::COUNTRY_UNKNOWN;
+	auto strUniqueID = Core::g_CoreStartupParameter.m_strUniqueID;
+	u32 CurrentGameId = 0;
+	if (strUniqueID.length() >= 4)
+	{
+		CountryCode = DiscIO::CountrySwitch(strUniqueID.at(3));
+		memcpy((u8*)&CurrentGameId, strUniqueID.c_str(), 4);
+	}
+	bool ascii = true;
+	std::string strDirectoryName = File::GetUserPath(D_GCUSER_IDX);
+	switch (CountryCode)
+	{
+	case  DiscIO::IVolume::COUNTRY_JAPAN:
+		ascii = false;
+		strDirectoryName += JAP_DIR DIR_SEP;
+		break;
+	case DiscIO::IVolume::COUNTRY_USA:
+		strDirectoryName += USA_DIR DIR_SEP;
+		break;
+	default:
+		CountryCode = DiscIO::IVolume::COUNTRY_EUROPE;
+		strDirectoryName += EUR_DIR DIR_SEP;
+	}
+	strDirectoryName += StringFromFormat("Card %c", 'A' + card_index) + DIR_SEP;
+	if (!File::Exists(strDirectoryName))
+	{
+		File::CreateFullPath(strDirectoryName);
+		std::string ini_memcard = (card_index == 0) ? SConfig::GetInstance().m_strMemoryCardA : SConfig::GetInstance().m_strMemoryCardB;
+		if (File::Exists(ini_memcard))
+		{
+			GCMemcard memcard(ini_memcard.c_str());
+			if (memcard.IsValid())
+			{
+				for (u8 i = 0; i < DIRLEN; i++)
+				{
+					memcard.ExportGci(i, NULL, strDirectoryName);
+				}
+			}
+		}
+	}
+	else if (!File::IsDirectory(strDirectoryName))
+	{
+		// TODO more user friendly abort
+		PanicAlert("%s is not a directory", strDirectoryName.c_str());
+		exit(0);
+	}
+
+	memorycard = new GCMemcardDirectory(strDirectoryName, card_index, MemCard2043Mb, ascii, CountryCode, CurrentGameId);
+}
+void CEXIMemoryCard::setupRawMC()
+{
+	std::string filename = (card_index == 0) ? SConfig::GetInstance().m_strMemoryCardA : SConfig::GetInstance().m_strMemoryCardB;
+	if (Movie::IsPlayingInput() && Movie::IsConfigSaved() && Movie::IsUsingMemcard() && Movie::IsStartingFromClearSave())
+		filename = File::GetUserPath(D_GCUSER_IDX) + "Movie.raw";
+
+
 
 	// The following games have issues with memory cards bigger than 16Mb
 	// Darkened Skye GDQE6S GDQP6S
@@ -91,12 +160,7 @@ CEXIMemoryCard::CEXIMemoryCard(const int index)
 		sizeMb = MemCard251Mb;
 		filename.insert(filename.find_last_of("."), ".251");
 	}
-	card_id = 0xc221; // It's a Nintendo brand memcard
 	memorycard = new MemoryCard(filename, card_index, sizeMb);
-	memory_card_size = memorycard->GetCardId() * SIZE_TO_Mb;
-	u8 header[20] = { 0 };
-	memorycard->Read(0, 20, header);
-	SetCardFlashID(header, card_index);
 }
 
 CEXIMemoryCard::~CEXIMemoryCard()

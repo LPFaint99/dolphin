@@ -4,8 +4,13 @@
 
 #pragma once
 
+#include "Common/ChunkFile.h"
 #include "Common/Thread.h"
-#include "GCMemcard.h"
+
+enum : u16
+{
+	MemCard2043Mb = 0x80
+};
 
 // Data structure to be passed to the flushing thread.
 struct FlushData

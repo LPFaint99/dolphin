@@ -11,6 +11,7 @@
 #include "Common/StringUtil.h"
 
 #include "Core/HW/EXI_DeviceIPL.h"
+#include "Core/HW/EXI_DeviceMemoryCardRaw.h"
 #include "Core/HW/Sram.h"
 
 // Uncomment this to write the system data of the memorycard from directory to disc 
@@ -55,7 +56,7 @@ enum
 	MemCard251Mb  = 0x10,
 	Memcard507Mb  = 0x20,
 	MemCard1019Mb = 0x40,
-	MemCard2043Mb = 0x80,
+	//MemCard2043Mb = 0x80,
 
 	CI8SHARED = 1,
 	RGB5A3,
@@ -360,18 +361,18 @@ public:
 	u32 ReadAnimRGBA8(u8 index, u32* buffer, u8 *delays) const;
 };
 
-class GCMemcardDirectory : NonCopyable
+class GCMemcardDirectory : public MemoryCardBase, NonCopyable
 {
 public:
 	GCMemcardDirectory(std::string directory, int slot = 0, u16 sizeMb = MemCard2043Mb, bool ascii=true, int region=0, int gameId=0);
 	~GCMemcardDirectory(){Flush(true);}
-	int Flush(bool exiting=false);
+	void Flush(bool exiting=false) override;
 
-	s32 Read(u32 address, s32 length, u8* destaddress);
-	s32 Write(u32 destaddress, s32 length, u8* srcaddress);
-	void clearBlock(u32 block);
-	void clearAll() {};
-	void DoState(PointerWrap &p);
+	s32 Read(u32 address, s32 length, u8* destaddress) override;
+	s32 Write(u32 destaddress, s32 length, u8* srcaddress) override;
+	void ClearBlock(u32 address) override;
+	void ClearAll() override { ; }
+	void DoState(PointerWrap &p) override;
 private:
 	int LoadGCI(std::string fileName, int region);
 	inline s32 SaveAreaRW(u32 block, bool writing=false);

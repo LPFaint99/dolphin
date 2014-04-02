@@ -13,7 +13,6 @@
 #include "Core/HW/EXI_DeviceGecko.h"
 #include "Core/HW/EXI_DeviceIPL.h"
 #include "Core/HW/EXI_DeviceMemoryCard.h"
-#include "Core/HW/EXI_DeviceMemoryCardFolder.h"
 #include "Core/HW/EXI_DeviceMic.h"
 #include "Core/HW/Memmap.h"
 
@@ -94,20 +93,20 @@ IEXIDevice* EXIDevice_Create(TEXIDevices device_type, const int channel_num)
 {
 	IEXIDevice* result = nullptr;
 
- 	switch (device_type)
+	switch (device_type)
 	{
 	case EXIDEVICE_DUMMY:
 		result = new CEXIDummy("Dummy");
 		break;
 
 	case EXIDEVICE_MEMORYCARD:
-		result = new CEXIMemoryCard(channel_num);
-		break;
-
 	case EXIDEVICE_MEMORYCARDFOLDER:
-		result = new CEXIMemoryCardFolder(channel_num);
+		{
+		bool gci_folder = (device_type == EXIDEVICE_MEMORYCARDFOLDER);
+		result = new CEXIMemoryCard(channel_num, gci_folder);
+		device_type = EXIDEVICE_MEMORYCARD;
 		break;
-		
+		}
 	case EXIDEVICE_MASKROM:
 		result = new CEXIIPL();
 		break;
