@@ -177,11 +177,11 @@ s32 GCMemcardDirectory::Read(u32 address, s32 length, u8* destaddress)
 			m_LastBlockAddress = (u8*)&m_hdr;
 			break;
 		case 1:
-			m_LastBlock = block;
+			m_LastBlock = -1;
 			m_LastBlockAddress = (u8*)&m_dir1;
 			break;
 		case 2:
-			m_LastBlock = block;
+			m_LastBlock = -1;
 			m_LastBlockAddress = (u8*)&m_dir2;
 			break;
 		case 3:
@@ -211,6 +211,8 @@ s32 GCMemcardDirectory::Read(u32 address, s32 length, u8* destaddress)
 
 s32 GCMemcardDirectory::Write(u32 destaddress, s32 length, u8* srcaddress)
 {
+	if (length != 0x80)
+		ERROR_LOG(EXPANSIONINTERFACE, "WRITING TO %x, len %x", destaddress, length);
 	u32 block = destaddress / BLOCK_SIZE;
 	u32 offset = destaddress % BLOCK_SIZE;
 	s32 extra = 0; // used for write calls that are across multiple blocks
@@ -257,8 +259,8 @@ s32 GCMemcardDirectory::Write(u32 destaddress, s32 length, u8* srcaddress)
 			m_LastBlock = SaveAreaRW(block, true);
 			if (m_LastBlock == -1)
 			{
-				PanicAlert("Writing to unallocated block");
-				return 0;
+				PanicAlert("Report: GCIFolder Writing to unallocated block %x", block);
+				exit(0);
 			}
 		}
 	}
@@ -286,19 +288,11 @@ void GCMemcardDirectory::ClearBlock(u32 address)
 		m_LastBlockAddress = (u8*)&m_hdr;
 		break;
 	case 1:
-		if (BE16(m_dir1.UpdateCounter) > BE16(m_dir2.UpdateCounter))
-		{
-			m_saves.clear();
-		}
-		m_LastBlock = block;
+		m_LastBlock = -1;
 		m_LastBlockAddress = (u8*)&m_dir1;
 		break;
 	case 2:
-		if (BE16(m_dir1.UpdateCounter) < BE16(m_dir2.UpdateCounter))
-		{
-			m_saves.clear();
-		}
-		m_LastBlock = block;
+		m_LastBlock = -1;
 		m_LastBlockAddress = (u8*)&m_dir2;
 		break;
 	case 3:
@@ -317,8 +311,42 @@ void GCMemcardDirectory::ClearBlock(u32 address)
 	((GCMBlock*)m_LastBlockAddress)->erase();
 }
 
+inline void GCMemcardDirectory::SyncSaves()
+{
+	Directory * current = &m_dir2;
+
+	if (BE16(m_dir1.UpdateCounter) > BE16(m_dir2.UpdateCounter))
+	{
+		current = &m_dir1;
+	}
+	
+	int sz = m_saves.size();
+	for (u32 i = 0; i < DIRLEN; ++i)
+	{
+		if (*(u32*)&(current->Dir[i]) != 0xFFFFFFFF)
+		{
+			bool added = false;
+			while(i >= m_saves.size())
+			{
+				GCIFile temp;
+				m_saves.push_back(temp);
+				added = true;
+			}
+			
+			if (added || memcmp((u8*)&(m_saves[i].m_gci_header), (u8*)&(current->Dir[i]), DENTRY_SIZE))
+			{
+				m_saves[i].m_dirty = true;
+				memcpy((u8*)&(m_saves[i].m_gci_header), (u8*)&(current->Dir[i]), DENTRY_SIZE);
+			}
+		}
+		else if ((i < m_saves.size()) && (*(u32*)&(m_saves[i].m_gci_header) != 0xFFFFFFFF))
+		{
+			*(u32*)&(m_saves[i].m_gci_header.Gamecode) = 0xFFFFFFF;
+		}
+	}
+}
 inline s32 GCMemcardDirectory::SaveAreaRW(u32 block, bool writing)
-{		
+{	
 	for (int i = 0; i < m_saves.size(); ++i)
 	{
 		if (BE32(m_saves[i].m_gci_header.Gamecode) != 0xFFFFFFFF)
@@ -361,19 +389,7 @@ s32 GCMemcardDirectory::DirectoryWrite(u32 destaddress, u32 length, u8* srcaddre
 	u32 offset = destaddress % BLOCK_SIZE;
 	bool currentdir = false;
 	Directory * dest = (block == 1) ? &m_dir1 : &m_dir2;
-	Directory * other = (block != 1) ? &m_dir1 : &m_dir2;
-	if (BE16(dest->UpdateCounter) > BE16(other->UpdateCounter))
-	{
-		currentdir = true;
-	}
-	else
-	{
-		
-		memcpy((u8*)(dest)+offset, srcaddress, length);
-	}
-	m_LastBlock = -1;
 	u16 Dnum = offset / DENTRY_SIZE;
-	u16 Doffset = offset % DENTRY_SIZE;
 
 	if (Dnum == DIRLEN)
 	{
@@ -381,33 +397,10 @@ s32 GCMemcardDirectory::DirectoryWrite(u32 destaddress, u32 length, u8* srcaddre
 		// needed to update the update ctr, checksums
 		// could check for writes to the 6 important bytes but doubtful that it improves performance noticably
 		memcpy((u8*)(dest)+offset, srcaddress, length);
+		SyncSaves();
 	}
-	else if (Dnum < m_saves.size())
-	{
-		if (memcmp(((u8*)&(m_saves[Dnum].m_gci_header))+Doffset, srcaddress, length))
-		{
-			m_saves[Dnum].m_dirty = true;
-			memcpy(((u8*)&(m_saves[Dnum].m_gci_header))+Doffset, srcaddress, length);
-			memcpy(((u8*)&(dest->Dir[Dnum]))+Doffset, srcaddress, length);
-		}
-	}
-	else // this probably could be optimized to ignore the 0xff dir entries
-	{	 // writes to the Directory are always BLOCK_SIZE
-		if (Dnum - m_saves.size() > 1)
-		{
-			PanicAlert("Gap left when adding directory entry???");
-			exit(0);
-		}
-		else
-		{
-			GCIFile temp;
-			temp.m_dirty = true;
-			memcpy(((u8*)&(temp.m_gci_header))+Doffset, srcaddress, length);
-			memcpy(((u8*)&(dest->Dir[Dnum]))+Doffset, srcaddress, length);
-			m_saves.push_back(temp);
-		}
-	}
-	return 0;
+	else memcpy((u8*)(dest)+offset, srcaddress, length);
+	return length;
 }
 
 bool GCMemcardDirectory::SetUsedBlocks(int saveIndex)
@@ -455,8 +448,18 @@ void GCMemcardDirectory::Flush(bool exiting)
 				m_saves[i].m_dirty = false;
 				if (m_saves[i].m_filename.empty())
 				{
-					std::string filename = m_saves[i].m_gci_header.GCI_FileName();
-					m_saves[i].m_filename = m_SaveDirectory+filename;
+					std::string defaultSaveName = m_SaveDirectory + m_saves[i].m_gci_header.GCI_FileName();
+
+					// Check to see if another file is using the same name
+					// This seems unlikely except in the case of file corruption
+					// otherwise what user would name another file this way?
+					for (int j = 0; File::Exists(defaultSaveName) && j < 10; ++j)
+					{
+						defaultSaveName.insert(defaultSaveName.end()-4, '0');
+					}
+					if (File::Exists(defaultSaveName))
+						PanicAlert("Failed to find new filename\n %s\n will be overwritten", defaultSaveName.c_str());
+					m_saves[i].m_filename = defaultSaveName;
 				}
 				File::IOFile GCI(m_saves[i].m_filename, "wb");
 				if (GCI)
