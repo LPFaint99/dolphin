@@ -925,7 +925,6 @@ u32 GCMemcard::ExportGci(u8 index, const std::string& fileName, const std::strin
 			offset = SAV;
 		}
 	}
-	
 
 	if (!gci)
 		return OPENFAIL;

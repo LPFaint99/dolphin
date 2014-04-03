@@ -138,7 +138,7 @@ GCMemcardDirectory::GCMemcardDirectory(std::string directory, int slot, u16 size
 		{
 			if (m_saves.size() == DIRLEN)
 			{
-				PanicAlert("There are too many gci files in the folder\n%s\nOnly the first 127 will be available", m_SaveDirectory.c_str());
+				PanicAlertT("There are too many gci files in the folder\n%s\nOnly the first 127 will be available", m_SaveDirectory.c_str());
 				break;
 			}
 			int index = LoadGCI(FST_Temp.children[j].physicalName, region);
@@ -261,7 +261,7 @@ s32 GCMemcardDirectory::Write(u32 destaddress, s32 length, u8* srcaddress)
 			m_LastBlock = SaveAreaRW(block, true);
 			if (m_LastBlock == -1)
 			{
-				PanicAlert("Report: GCIFolder Writing to unallocated block %x", block);
+				PanicAlertT("Report: GCIFolder Writing to unallocated block %x", block);
 				exit(0);
 			}
 		}
@@ -421,7 +421,7 @@ bool GCMemcardDirectory::SetUsedBlocks(int saveIndex)
 		block = currentBat->GetNextBlock(block);
 		if (block == 0)
 		{
-			PanicAlert("BAT Incorrect, Dolphin will now exit");
+			PanicAlertT("BAT Incorrect, Dolphin will now exit");
 			exit(0);
 		}
 	}
@@ -430,7 +430,7 @@ bool GCMemcardDirectory::SetUsedBlocks(int saveIndex)
 
 	if (m_saves[saveIndex].m_used_blocks.size() != num_blocks)
 	{
-		PanicAlert("Warning BAT number of blocks does not match file header");
+		PanicAlertT("Warning BAT number of blocks does not match file header");
 		return false;
 	}
 
@@ -460,7 +460,7 @@ void GCMemcardDirectory::Flush(bool exiting)
 						defaultSaveName.insert(defaultSaveName.end()-4, '0');
 					}
 					if (File::Exists(defaultSaveName))
-						PanicAlert("Failed to find new filename\n %s\n will be overwritten", defaultSaveName.c_str());
+						PanicAlertT("Failed to find new filename\n %s\n will be overwritten", defaultSaveName.c_str());
 					m_saves[i].m_filename = defaultSaveName;
 				}
 				File::IOFile GCI(m_saves[i].m_filename, "wb");
@@ -556,7 +556,7 @@ bool GCIFile::LoadSaveBlocks()
 		m_save_data.resize(num_blocks);
 		if (!savefile.ReadBytes(m_save_data.data(), num_blocks*BLOCK_SIZE))
 		{
-			PanicAlert("failed to read data from gci file %s", m_filename.c_str());
+			PanicAlertT("Failed to read data from gci file %s", m_filename.c_str());
 			m_save_data.clear();
 			return false;
 		}
