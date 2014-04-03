@@ -2,10 +2,12 @@
 // Licensed under GPLv2
 // Refer to the license.txt file included.
 
-#include "GCMemcardDirectory.h"
 #include "DiscIO/Volume.h"
-#include "../Core.h"
 #include "Common/CommonTypes.h"
+
+#include "Core/ConfigManager.h"
+#include "Core/Core.h"
+#include "Core/HW/GCMemcardDirectory.h"
 
 const int NO_INDEX = -1;
 const char * MC_HDR = "MC_SYSTEM_AREA";
@@ -586,4 +588,21 @@ void GCIFile::DoState(PointerWrap &p)
 	}
 	p.Do(m_used_blocks);
 
+}
+
+void MigrateFromMemcardFile(std::string strDirectoryName, int card_index)
+{
+	File::CreateFullPath(strDirectoryName);
+	std::string ini_memcard = (card_index == 0) ? SConfig::GetInstance().m_strMemoryCardA : SConfig::GetInstance().m_strMemoryCardB;
+	if (File::Exists(ini_memcard))
+	{
+		GCMemcard memcard(ini_memcard.c_str());
+		if (memcard.IsValid())
+		{
+			for (u8 i = 0; i < DIRLEN; i++)
+			{
+				memcard.ExportGci(i, "", strDirectoryName);
+			}
+		}
+	}
 }

@@ -112,31 +112,29 @@ void CEXIMemoryCard::setupFolder()
 		CountryCode = DiscIO::IVolume::COUNTRY_EUROPE;
 		strDirectoryName += EUR_DIR DIR_SEP;
 	}
-	strDirectoryName += StringFromFormat("Card %c", 'A' + card_index) + DIR_SEP;
-	if (!File::Exists(strDirectoryName))
+	strDirectoryName += StringFromFormat("Card %c", 'A' + card_index);
+
+	if (!File::Exists(strDirectoryName)) // first use of memcard folder, migrate automatically
 	{
-		File::CreateFullPath(strDirectoryName);
-		std::string ini_memcard = (card_index == 0) ? SConfig::GetInstance().m_strMemoryCardA : SConfig::GetInstance().m_strMemoryCardB;
-		if (File::Exists(ini_memcard))
-		{
-			GCMemcard memcard(ini_memcard.c_str());
-			if (memcard.IsValid())
-			{
-				for (u8 i = 0; i < DIRLEN; i++)
-				{
-					memcard.ExportGci(i, NULL, strDirectoryName);
-				}
-			}
-		}
+		MigrateFromMemcardFile(strDirectoryName + DIR_SEP, card_index);
 	}
 	else if (!File::IsDirectory(strDirectoryName))
 	{
-		// TODO more user friendly abort
-		PanicAlert("%s is not a directory", strDirectoryName.c_str());
-		exit(0);
+		if (File::Rename(strDirectoryName, strDirectoryName + ".original"))
+		{
+			PanicAlertT("%s was not a directory, moved to *.original", strDirectoryName.c_str());
+			MigrateFromMemcardFile(strDirectoryName + DIR_SEP, card_index);
+		}
+		else // we tried but the user wants to crash
+		{
+			// TODO more user friendly abort
+			PanicAlertT("%s is not a directory, failed to move to *.original.\n Verify your write permissions or move the file outside of dolphin", strDirectoryName.c_str());
+			exit(0);
+		}
 	}
 
-	memorycard = new GCMemcardDirectory(strDirectoryName, card_index, MemCard2043Mb, ascii, CountryCode, CurrentGameId);
+
+	memorycard = new GCMemcardDirectory(strDirectoryName + DIR_SEP, card_index, MemCard2043Mb, ascii, CountryCode, CurrentGameId);
 }
 void CEXIMemoryCard::setupRawMC()
 {

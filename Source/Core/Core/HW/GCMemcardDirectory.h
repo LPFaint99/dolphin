@@ -8,6 +8,7 @@
 
 // Uncomment this to write the system data of the memorycard from directory to disc 
 //#define _WRITE_MC_HEADER 1
+void MigrateFromMemcardFile(std::string strDirectoryName, int card_index);
 
 class GCMemcardDirectory : public MemoryCardBase, NonCopyable
 {
