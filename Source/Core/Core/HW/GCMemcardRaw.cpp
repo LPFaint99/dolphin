@@ -2,7 +2,7 @@
 // Licensed under GPLv2
 // Refer to the license.txt file included.
 #include "Core/Core.h"
-#include "Core/HW/EXI_DeviceMemoryCardRaw.h"
+#include "Core/HW/GCMemcardRaw.h"
 #include "Core/HW/GCMemcard.h"
 #define SIZE_TO_Mb (1024 * 8 * 16)
 #define MC_HDR_SIZE 0xA000
