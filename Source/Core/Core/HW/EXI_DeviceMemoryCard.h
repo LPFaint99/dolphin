@@ -19,8 +19,8 @@ public:
 	void DMARead(u32 _uAddr, u32 _uSize) override;
 	void DMAWrite(u32 _uAddr, u32 _uSize) override;
 private:
-	void setupFolder();
-	void setupRawMC();
+	void setupGciFolder();
+	void setupRawMemcard();
 	// This is scheduled whenever a page write is issued. The this pointer is passed
 	// through the userdata parameter, so that it can then call Flush on the right card.
 	static void FlushCallback(u64 userdata, int cyclesLate);

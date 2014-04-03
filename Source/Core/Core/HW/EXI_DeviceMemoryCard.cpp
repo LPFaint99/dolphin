@@ -73,12 +73,14 @@ CEXIMemoryCard::CEXIMemoryCard(const int index, bool gciFolder)
 	//card_id = 0xc243;
 	card_id = 0xc221; // It's a Nintendo brand memcard
 
-	if (!gciFolder)
+	if (gciFolder)
 	{
-		setupRawMC();
+		setupGciFolder();
 	}
 	else
-		setupFolder();
+	{
+		setupRawMemcard();
+	}
 
 	memory_card_size = memorycard->GetCardId() * SIZE_TO_Mb;
 	u8 header[20] = { 0 };
@@ -86,7 +88,7 @@ CEXIMemoryCard::CEXIMemoryCard(const int index, bool gciFolder)
 	SetCardFlashID(header, card_index);
 }
 
-void CEXIMemoryCard::setupFolder()
+void CEXIMemoryCard::setupGciFolder()
 {
 
 	DiscIO::IVolume::ECountry CountryCode = DiscIO::IVolume::COUNTRY_UNKNOWN;
@@ -136,7 +138,7 @@ void CEXIMemoryCard::setupFolder()
 
 	memorycard = new GCMemcardDirectory(strDirectoryName + DIR_SEP, card_index, MemCard2043Mb, ascii, CountryCode, CurrentGameId);
 }
-void CEXIMemoryCard::setupRawMC()
+void CEXIMemoryCard::setupRawMemcard()
 {
 	std::string filename = (card_index == 0) ? SConfig::GetInstance().m_strMemoryCardA : SConfig::GetInstance().m_strMemoryCardB;
 	if (Movie::IsPlayingInput() && Movie::IsConfigSaved() && Movie::IsUsingMemcard() && Movie::IsStartingFromClearSave())
