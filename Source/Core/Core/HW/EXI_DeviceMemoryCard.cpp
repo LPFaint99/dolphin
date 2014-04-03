@@ -13,8 +13,9 @@
 #include "Core/HW/EXI.h"
 #include "Core/HW/EXI_Device.h"
 #include "Core/HW/EXI_DeviceMemoryCard.h"
-#include "Core/HW/GCMemcardRaw.h"
 #include "Core/HW/GCMemcard.h"
+#include "Core/HW/GCMemcardDirectory.h"
+#include "Core/HW/GCMemcardRaw.h"
 #include "Core/HW/Sram.h"
 #include "Memmap.h"
 

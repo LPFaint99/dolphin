@@ -413,6 +413,9 @@
     <ClCompile Include="HW\GCMemcardDirectory.cpp">
       <Filter>HW %28Flipper/Hollywood%29\GCMemcard</Filter>
     </ClCompile>
+    <ClCompile Include="HW\GCMemcardRaw.cpp">
+      <Filter>HW %28Flipper/Hollywood%29\GCMemcard</Filter>
+    </ClCompile>
     <ClCompile Include="HW\GCPad.cpp">
       <Filter>HW %28Flipper/Hollywood%29\GCPad</Filter>
     </ClCompile>
@@ -705,9 +708,6 @@
     <ClCompile Include="PowerPC\JitILCommon\IR.cpp">
       <Filter>PowerPC\JitILCommon</Filter>
     </ClCompile>
-    <ClCompile Include="HW\GCMemcardRaw.cpp">
-      <Filter>HW %28Flipper/Hollywood%29\GCMemcard</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="BootManager.h" />
@@ -937,6 +937,12 @@
       <Filter>HW %28Flipper/Hollywood%29\EXI - Expansion Interface</Filter>
     </ClInclude>
     <ClInclude Include="HW\GCMemcard.h">
+      <Filter>HW %28Flipper/Hollywood%29\GCMemcard</Filter>
+    </ClInclude>
+    <ClInclude Include="HW\GCMemcardDirectory.h">
+      <Filter>HW %28Flipper/Hollywood%29\GCMemcard</Filter>
+    </ClInclude>
+    <ClInclude Include="HW\GCMemcardRaw.h">
       <Filter>HW %28Flipper/Hollywood%29\GCMemcard</Filter>
     </ClInclude>
     <ClInclude Include="HW\GCPadEmu.h">
@@ -1212,9 +1218,6 @@
     </ClInclude>
     <ClInclude Include="PowerPC\JitILCommon\IR.h">
       <Filter>PowerPC\JitILCommon</Filter>
-    </ClInclude>
-    <ClInclude Include="HW\GCMemcardRaw.h">
-      <Filter>HW %28Flipper/Hollywood%29\GCMemcard</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
