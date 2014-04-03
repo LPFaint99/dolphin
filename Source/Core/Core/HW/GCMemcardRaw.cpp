@@ -123,7 +123,7 @@ s32 MemoryCard::Write(u32 destaddress, s32 length, u8* srcaddress)
 {
 	if (!memory_card_content)
 		return -1;
-	
+
 	if (destaddress > (memory_card_size - 1))
 	{
 		PanicAlertT("MemoryCard: Write called with invalid destination address, %x", destaddress);

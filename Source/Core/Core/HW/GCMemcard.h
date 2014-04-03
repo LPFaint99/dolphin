@@ -103,8 +103,8 @@ struct Header {         //Offset    Size    Description
 	u16 Checksum;       //0x01fc    2       Additive Checksum
 	u16 Checksum_Inv;   //0x01fe    2       Inverse Checksum
 	u8 Unused2[7680];   //0x0200    0x1e00  Unused (0xff)
-		
-		
+
+
 	void CARD_GetSerialNo(u32 *serial1,u32 *serial2) const
 	{
 		u32 serial[8];
@@ -201,7 +201,7 @@ struct Directory
 	u16 Checksum;       //0x1ffc    2       Additive Checksum
 	u16 Checksum_Inv;   //0x1ffe    2       Inverse Checksum
 	Directory()
-	{		
+	{
 		memset(this, 0xFF, BLOCK_SIZE);
 		UpdateCounter = 0;
 		Checksum = BE16(0xF003);

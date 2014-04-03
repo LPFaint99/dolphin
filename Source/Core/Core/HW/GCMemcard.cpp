@@ -1209,7 +1209,7 @@ bool GCMemcard::Format(u8 * card_data, bool ascii, u16 SizeMb)
 	memset(card_data + BLOCK_SIZE*3, 0, BLOCK_SIZE*2);
 
 	*((Header*)card_data) = Header(SLOT_A, SizeMb, ascii);
-	
+
 	*((Directory *)(card_data + BLOCK_SIZE)) = Directory();
 	*((Directory *)(card_data + BLOCK_SIZE*2)) = Directory();
 	*((BlockAlloc *)(card_data + BLOCK_SIZE*3)) = BlockAlloc(SizeMb);

@@ -28,7 +28,7 @@ private:
 	//s32 DirectoryRead(u32 offset, u32 length, u8* destaddress);
 	s32 DirectoryWrite(u32 destaddress, u32 length, u8* srcaddress);
 	inline void SyncSaves();
-	bool SetUsedBlocks(int saveIndex); 
+	bool SetUsedBlocks(int saveIndex);
 
 	u32 m_GameId;
 	s32 m_LastBlock;
