@@ -73,13 +73,24 @@ CEXIMemoryCard::CEXIMemoryCard(const int index, bool gciFolder)
 	//card_id = 0xc243;
 	card_id = 0xc221; // It's a Nintendo brand memcard
 
+	// The following games have issues with memory cards bigger than 16Mb
+	// Darkened Skye GDQE6S GDQP6S
+	// WTA Tour Tennis GWTEA4 GWTJA4 GWTPA4
+	// Disney Sports : Skate Boarding GDXEA4 GDXPA4 GDXJA4
+	// Disney Sports : Soccer GDKEA4
+	// Use a 16Mb (251 block) memory card for these games
+	bool useMC251;
+	IniFile gameIni = Core::g_CoreStartupParameter.LoadGameIni();
+	gameIni.Get("Core", "MemoryCard251", &useMC251, false);
+	u16 sizeMb = useMC251 ? MemCard251Mb : MemCard2043Mb;
+
 	if (gciFolder)
 	{
-		setupGciFolder();
+		setupGciFolder(sizeMb);
 	}
 	else
 	{
-		setupRawMemcard();
+		setupRawMemcard(sizeMb);
 	}
 
 	memory_card_size = memorycard->GetCardId() * SIZE_TO_Mb;
@@ -88,7 +99,7 @@ CEXIMemoryCard::CEXIMemoryCard(const int index, bool gciFolder)
 	SetCardFlashID(header, card_index);
 }
 
-void CEXIMemoryCard::setupGciFolder()
+void CEXIMemoryCard::setupGciFolder(u16 sizeMb)
 {
 
 	DiscIO::IVolume::ECountry CountryCode = DiscIO::IVolume::COUNTRY_UNKNOWN;
@@ -138,27 +149,14 @@ void CEXIMemoryCard::setupGciFolder()
 
 	memorycard = new GCMemcardDirectory(strDirectoryName + DIR_SEP, card_index, MemCard2043Mb, ascii, CountryCode, CurrentGameId);
 }
-void CEXIMemoryCard::setupRawMemcard()
+void CEXIMemoryCard::setupRawMemcard(u16 sizeMb)
 {
 	std::string filename = (card_index == 0) ? SConfig::GetInstance().m_strMemoryCardA : SConfig::GetInstance().m_strMemoryCardB;
 	if (Movie::IsPlayingInput() && Movie::IsConfigSaved() && Movie::IsUsingMemcard() && Movie::IsStartingFromClearSave())
 		filename = File::GetUserPath(D_GCUSER_IDX) + "Movie.raw";
 
-
-
-	// The following games have issues with memory cards bigger than 16Mb
-	// Darkened Skye GDQE6S GDQP6S
-	// WTA Tour Tennis GWTEA4 GWTJA4 GWTPA4
-	// Disney Sports : Skate Boarding GDXEA4 GDXPA4 GDXJA4
-	// Disney Sports : Soccer GDKEA4
-	// Use a 16Mb (251 block) memory card for these games
-	bool useMC251;
-	IniFile gameIni = Core::g_CoreStartupParameter.LoadGameIni();
-	gameIni.Get("Core", "MemoryCard251", &useMC251, false);
-	u16 sizeMb = MemCard2043Mb;
-	if (useMC251)
+	if (sizeMb == MemCard251Mb)
 	{
-		sizeMb = MemCard251Mb;
 		filename.insert(filename.find_last_of("."), ".251");
 	}
 	memorycard = new MemoryCard(filename, card_index, sizeMb);
