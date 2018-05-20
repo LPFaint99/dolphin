@@ -161,6 +161,7 @@ void CEXIIPL::DoState(PointerWrap& p)
   p.Do(m_uRWOffset);
   p.Do(m_buffer);
   p.Do(m_FontsLoaded);
+  p.Do(g_SRAM);
 }
 
 bool CEXIIPL::LoadFileToIPL(const std::string& filename, u32 offset)
