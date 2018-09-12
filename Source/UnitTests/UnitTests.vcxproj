@@ -58,6 +58,7 @@
     <ClCompile Include="*.cpp" />
     <ClCompile Include="*\*.cpp" />
     <ClCompile Include="*\*\*.cpp" />
+    <ClCompile Include="Core\HW\GCMemcard\GCMemcardDirectoryTest.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="CMakeLists.txt" />

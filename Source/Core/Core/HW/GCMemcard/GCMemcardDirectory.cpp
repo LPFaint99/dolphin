@@ -249,6 +249,7 @@ s32 GCMemcardDirectory::Read(u32 src_address, s32 length, u8* dest_address)
 
       if (m_last_block == -1)
       {
+        // TODO read from m_unattached_blocks
         memset(dest_address, 0xFF, length);
         return 0;
       }
@@ -313,8 +314,7 @@ s32 GCMemcardDirectory::Write(u32 dest_address, s32 length, const u8* src_addres
       m_last_block = SaveAreaRW(block, true);
       if (m_last_block == -1)
       {
-        PanicAlertT("Report: GCIFolder Writing to unallocated block 0x%x", block);
-        exit(0);
+        BlockWrittenBeforeDEntry(block);
       }
     }
   }
@@ -363,6 +363,7 @@ void GCMemcardDirectory::ClearBlock(u32 address)
     break;
   default:
     m_last_block = SaveAreaRW(block, true);
+    // TODO erase from m_unattached_blocks
     if (m_last_block == -1)
       return;
   }
@@ -487,6 +488,34 @@ s32 GCMemcardDirectory::DirectoryWrite(u32 dest_address, u32 length, const u8* s
   return length;
 }
 
+void GCMemcardDirectory::BlockWrittenBeforeDEntry(u16 block)
+{
+  BlockAlloc* current_bat;
+  if (BE16(m_bat2.UpdateCounter) > BE16(m_bat1.UpdateCounter))
+    current_bat = &m_bat2;
+  else
+    current_bat = &m_bat1;
+
+  if (!current_bat->Map[block - MC_FST_BLOCKS])
+  {
+    PanicAlertT("Report: GCIFolder Writing to unallocated block 0x%x", block);
+    exit(0);
+  }
+  auto iterator = m_unattached_blocks.find(block);
+  GCMBlock* b;
+  if (iterator == m_unattached_blocks.end())
+  {
+    b = new GCMBlock();
+    m_unattached_blocks.insert(std::make_pair(block, b));
+    m_last_block_address = (u8*)b;
+  }
+  else
+  {
+    m_last_block_address = (u8*)iterator->second;
+
+  }
+};
+
 bool GCMemcardDirectory::SetUsedBlocks(int save_index)
 {
   BlockAlloc* current_bat;
@@ -499,6 +528,15 @@ bool GCMemcardDirectory::SetUsedBlocks(int save_index)
   while (block != 0xFFFF)
   {
     m_saves[save_index].m_used_blocks.push_back(block);
+
+    auto iterator = m_unattached_blocks.find(block);
+    if (iterator == m_unattached_blocks.end()) {
+      m_saves[save_index].m_save_data.emplace_back();
+    } else {
+      m_saves[save_index].m_save_data.emplace_back(*iterator->second);
+      delete iterator->second;
+      m_unattached_blocks.erase(block);
+    }
     block = current_bat->GetNextBlock(block);
     if (block == 0)
     {

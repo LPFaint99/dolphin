@@ -39,6 +39,7 @@ public:
 private:
   int LoadGCI(const std::string& file_name, bool current_game_only);
   inline s32 SaveAreaRW(u32 block, bool writing = false);
+  inline void BlockWrittenBeforeDEntry(u16 block);
   // s32 DirectoryRead(u32 offset, u32 length, u8* dest_address);
   s32 DirectoryWrite(u32 dest_address, u32 length, const u8* src_address);
   inline void SyncSaves();
@@ -54,6 +55,7 @@ private:
   std::vector<GCIFile> m_saves;
 
   std::vector<std::string> m_loaded_saves;
+  std::unordered_map<u16, GCMBlock*> m_unattached_blocks;
   std::string m_save_directory;
   Common::Event m_flush_trigger;
   std::mutex m_write_mutex;
