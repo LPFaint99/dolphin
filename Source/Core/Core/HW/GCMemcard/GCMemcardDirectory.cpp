@@ -654,6 +654,7 @@ void GCMemcardDirectory::FlushToFile()
 
 void GCMemcardDirectory::DoState(PointerWrap& p)
 {
+  // TODO: m_unattached_blocks
   std::unique_lock<std::mutex> l(m_write_mutex);
   m_last_block = -1;
   m_last_block_address = nullptr;
